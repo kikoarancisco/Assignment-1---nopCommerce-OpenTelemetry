@@ -1,6 +1,6 @@
 ﻿﻿---
 
-## 🏗️ Architecture Diagram
+## Architecture Diagram
 *(This diagram illustrates the instrumented checkout flow, showing the interaction between the Store, OpenTelemetry Decorator, Jaeger, Prometheus, and Grafana).*
 
 ![Architecture Diagram](./architecture-diagram.jpg) 
