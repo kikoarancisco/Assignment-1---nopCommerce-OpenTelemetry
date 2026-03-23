@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿﻿using Microsoft.AspNetCore.Http;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Payments;
 using Nop.Plugin.Payments.Manual.Components;
@@ -61,6 +61,17 @@ public class ManualPaymentProcessor : BasePlugin, IPaymentMethod
         {
             AllowStoringCreditCardNumber = true
         };
+
+        // // Temporary test hook to force a declined payment for a known test card.
+        // var normalizedCardNumber = (processPaymentRequest.CreditCardNumber ?? string.Empty)
+        //     .Replace(" ", string.Empty)
+        //     .Replace("-", string.Empty);
+        // if (normalizedCardNumber.Equals("4000000000000002", StringComparison.Ordinal))
+        // {
+        //     result.AddError("Test decline: card was rejected by payment provider simulator");
+        //     return Task.FromResult(result);
+        // }
+
         switch (_manualPaymentSettings.TransactMode)
         {
             case TransactMode.Pending:

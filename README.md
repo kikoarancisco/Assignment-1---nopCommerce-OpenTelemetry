@@ -1,4 +1,49 @@
-﻿﻿nopCommerce: free and open-source eCommerce solution
+﻿﻿---
+
+## 🏗️ Architecture Diagram
+*(This diagram illustrates the instrumented checkout flow, showing the interaction between the Store, OpenTelemetry Decorator, Jaeger, Prometheus, and Grafana).*
+
+![Architecture Diagram](./architecture-diagram.jpg) 
+
+---
+
+## How to Build and Run
+
+This project runs entirely on Docker. To spin up the infrastructure (nopCommerce, MySQL, Jaeger, Prometheus, and Grafana), execute the following command at the root of the repository:
+
+```bash
+docker compose up -d --build
+```
+
+nopCommerce Store: Accessible at http://localhost:80
+
+## How to Generate Traffic (Load Test)
+To populate the dashboards with meaningful data, a k6 load test script is included.
+
+1. Ensure k6 is installed on your machine.
+2. Run the script from the root directory:
+
+```bash
+k6 run loadtest.js
+```
+
+Note: While the script runs, manually place 1 or 2 orders (using the test credit card and the money order method) to trigger the custom business metrics.
+
+## How to View the Dashboards
+Once the containers are running and traffic is generated, you can inspect the observability data:
+
+1. Distributed Tracing (Jaeger): * Navigate to http://localhost:16686
+    - Select the NopCommerce-Loja service to view the checkout spans and redaction strategy.
+
+2. Business Metrics & Error Rates (Grafana): * Navigate to http://localhost:3000
+    - Import the provided dashboard configuration file: grafana-dashboard-export.json located in the root of this repository.
+
+## Arrchitecture Analysis & Critique
+The comprehensive architectural analysis, privacy strategy, and metric justification required for this assignment can be found in the CRITIQUE.md file at the root of this repository.
+
+
+
+nopCommerce: free and open-source eCommerce solution
 ===========
 
 [nopCommerce](https://www.nopcommerce.com/?utm_source=github&utm_medium=content&utm_campaign=homepage) is the best open-source eCommerce platform. nopCommerce is free, and it is the most popular ASP.NET Core shopping cart.
