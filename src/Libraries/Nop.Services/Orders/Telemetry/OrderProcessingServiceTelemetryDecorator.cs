@@ -65,6 +65,9 @@ public class OrderProcessingServiceTelemetryDecorator : IOrderProcessingService
             
             var errorMsg = result.Errors != null ? string.Join("; ", result.Errors) : "Unknown error";
             activity?.SetTag("checkout.error_message", errorMsg);
+            
+            //Grafana will consider any status code other than "Ok" as an error, so we set it to "Error" to make sure it shows up in our dashboards
+            activity?.SetStatus(ActivityStatusCode.Error, errorMsg);
 
             _rejectedPaymentsCounter.Add(1, new KeyValuePair<string, object>("payment_method", processPaymentRequest.PaymentMethodSystemName));
         }
@@ -73,6 +76,8 @@ public class OrderProcessingServiceTelemetryDecorator : IOrderProcessingService
         }
         catch (Exception)
         {
+            // Capture any unexpected exceptions, log them in the activity, and mark the activity as an error
+            activity?.SetStatus(ActivityStatusCode.Error, "Exceção ao processar pedido");
             throw; 
         }
     }
