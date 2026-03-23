@@ -1,17 +1,47 @@
 services:
-    nopcommerce_web:
-        build: .
-        container_name: nopcommerce
-        ports:
-            - "80:80"
-        depends_on:
-            - nopcommerce_database
-    nopcommerce_database:
-        image: "mysql:latest"
-        container_name: nopcommerce_mysql_server
-        restart: "always"
-        environment:
-          MYSQL_ROOT_PASSWORD: "nopCommerce_db_password"
+  nopcommerce_web:
+    build: .
+    container_name: nopcommerce
+    ports:
+      - "80:80"
+    volumes:
+      - nopcommerce_appdata:/app/App_Data
+    depends_on:
+      - nopcommerce_database
+      - jaeger
+
+  nopcommerce_database:
+    image: "mysql:8.4"
+    container_name: nopcommerce_mysql_server
+    restart: "always"
+    environment:
+      MYSQL_ROOT_PASSWORD: "nopCommerce_db_password"
+    volumes:
+      - nopcommerce_data:/var/lib/mysql
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-otlp-receiver'
+    ports:
+      - "9090:9090"
 
 volumes:
-  nopcommerce_data:            
+  nopcommerce_data:
+  nopcommerce_appdata:

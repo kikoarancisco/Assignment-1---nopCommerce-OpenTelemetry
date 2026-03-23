@@ -57,6 +57,11 @@ using Nop.Web.Framework.Mvc.Routing;
 using Nop.Web.Framework.Themes;
 using Nop.Web.Framework.UI;
 using TaskScheduler = Nop.Services.ScheduleTasks.TaskScheduler;
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Exporter;
 
 namespace Nop.Web.Framework.Infrastructure;
 
@@ -195,7 +200,15 @@ public partial class NopStartup : INopStartup
         services.AddScoped<IGiftCardService, GiftCardService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IOrderReportService, OrderReportService>();
-        services.AddScoped<IOrderProcessingService, OrderProcessingService>();
+        // 1. Register the actual OrderProcessingService as a class so we can inject it into our Decorator
+        services.AddScoped<OrderProcessingService>();
+
+        // 2. When someone requests IOrderProcessingService, provide an instance of the Telemetry Decorator, which wraps the actual OrderProcessingService
+        services.AddScoped<IOrderProcessingService>(provider => 
+        {
+            var innerService = provider.GetRequiredService<OrderProcessingService>();
+            return new Nop.Services.Orders.Telemetry.OrderProcessingServiceTelemetryDecorator(innerService);
+        });
         services.AddScoped<IOrderTotalCalculationService, OrderTotalCalculationService>();
         services.AddScoped<IReturnRequestService, ReturnRequestService>();
         services.AddScoped<IRewardPointService, RewardPointService>();
@@ -313,6 +326,27 @@ public partial class NopStartup : INopStartup
 
         //admin menu
         services.AddScoped<IAdminMenu, AdminMenu>();
+
+        services.AddOpenTelemetry()
+            .WithTracing(builder => builder
+                // 1. Give a name to our service
+                .SetResourceBuilder(OpenTelemetry.Resources.ResourceBuilder.CreateDefault().AddService("NopCommerce-Loja"))
+                .AddAspNetCoreInstrumentation()
+                .AddSource("NopCommerce.Checkout.Telemetry") 
+                .AddOtlpExporter(options => 
+                {
+                    options.Endpoint = new System.Uri("http://jaeger:4317"); 
+                })
+            )
+            .WithMetrics(builder => builder
+                .SetResourceBuilder(OpenTelemetry.Resources.ResourceBuilder.CreateDefault().AddService("NopCommerce-Loja"))
+                .AddMeter("NopCommerce.Checkout.Metrics") 
+            .AddOtlpExporter(options => 
+                {
+                    options.Endpoint = new System.Uri("http://prometheus:9090/api/v1/otlp/v1/metrics");
+                    options.Protocol = OtlpExportProtocol.HttpProtobuf;
+                })
+            );
 
         //register the Lazy resolver for .Net IoC
         var useAutofac = appSettings.Get<CommonConfig>().UseAutofac;
