@@ -12,7 +12,7 @@
 This project runs entirely on Docker. To spin up the infrastructure (nopCommerce, MySQL, Jaeger, Prometheus, and Grafana), execute the following command at the root of the repository:
 
 ```bash
-docker compose up -d --build
+docker compose -f 'mysql-docker-compose.yml' up -d --build
 ```
 
 nopCommerce Store: Accessible at http://localhost:80
